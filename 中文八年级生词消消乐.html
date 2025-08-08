@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>中文八年级生词消消乐</title>
+    <style>
+        /* --- 基础与字体设置 --- */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&family=Nunito:wght@700&display=swap');
+
+        :root {
+            --sky-blue-light: #a7e0ff;
+            --sky-blue-dark: #69c0ff;
+            --bubble-pink: rgba(255, 183, 197, 0.9);
+            --bubble-yellow: rgba(255, 246, 183, 0.9);
+            --bubble-green: rgba(183, 255, 197, 0.9);
+            --bubble-purple: rgba(220, 183, 255, 0.9);
+            --highlight-color: #ffdd57;
+            --font-family: 'Nunito', 'Noto Sans SC', sans-serif;
+            --text-color: #2c3e50;
+            --white-color: #ffffff;
+            --success-color: #27ae60;
+            --start-btn-bg: #ff7675;
+            --start-btn-hover: #d63031;
+            --selected-color: #48dbfb;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            font-family: var(--font-family);
+            overflow: hidden;
+            background: linear-gradient(to bottom, var(--sky-blue-light), var(--sky-blue-dark));
+            color: var(--text-color);
+            user-select: none;
+            font-weight: 700;
+        }
+
+        /* --- 背景云朵动画 --- */
+        .cloud { position: absolute; background: var(--white-color); border-radius: 50%; opacity: 0.8; filter: blur(2px); animation: moveClouds 80s linear infinite; }
+        .cloud:before, .cloud:after { content: ''; position: absolute; background: var(--white-color); border-radius: 50%; }
+        .cloud1 { width: 200px; height: 60px; top: 10%; left: -250px; }
+        .cloud1:before { width: 100px; height: 100px; top: -50px; left: 40px; }
+        .cloud1:after { width: 140px; height: 120px; top: -60px; right: 20px; }
+        .cloud2 { width: 250px; height: 80px; top: 25%; left: -300px; animation-duration: 60s; animation-delay: -20s; }
+        .cloud2:before { width: 120px; height: 120px; top: -60px; left: 50px; }
+        .cloud2:after { width: 160px; height: 140px; top: -70px; right: 30px; }
+        .cloud3 { width: 180px; height: 50px; top: 60%; left: -200px; animation-duration: 100s; animation-delay: -40s; }
+        .cloud3:before { width: 90px; height: 90px; top: -40px; left: 30px; }
+        .cloud3:after { width: 120px; height: 100px; top: -50px; right: 20px; }
+        @keyframes moveClouds { from { transform: translateX(0); } to { transform: translateX(calc(100vw + 300px)); } }
+
+        /* --- 整体布局 --- */
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5vh 2vw;
+            box-sizing: border-box;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* --- 控制区 --- */
+        .controls-area {
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 20px;
+            padding: 1vh 2vw;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            backdrop-filter: blur(5px);
+            margin-bottom: 1.5vh;
+            flex-shrink: 0;
+        }
+        
+        .title {
+            text-align: center;
+            font-size: clamp(1.8em, 5vmin, 2.5em);
+            color: var(--start-btn-hover);
+            margin: 0 0 1vh 0;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+        }
+
+        #unit-selection-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 1vh;
+        }
+
+        #unit-selection-container label {
+            display: flex;
+            align-items: center;
+            background: var(--white-color);
+            padding: 0.8vh 1.5vw;
+            font-size: clamp(1em, 2.5vmin, 1.2em);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #unit-selection-container input { margin-right: 8px; width: 1.8vmin; height: 1.8vmin; }
+        
+        #custom-list-container {
+            padding: 1vh;
+        }
+        #custom-list-textarea {
+            width: 100%;
+            height: 80px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            font-size: clamp(0.9em, 2vmin, 1.1em);
+            box-sizing: border-box;
+        }
+
+
+        .game-info { 
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 10px;
+        }
+        .progress-container { justify-self: start; }
+        .start-button-wrapper { justify-self: center; }
+        .timer-container { justify-self: end; }
+        
+        .progress-container, .timer-container { font-size: clamp(1em, 2.5vmin, 1.2em); }
+        .progress-bar { width: 20vw; max-width: 150px; height: 2.2vmin; min-height: 18px; background: #e0e0e0; border-radius: 10px; overflow: hidden; display: inline-block; margin-left: 10px; vertical-align: middle; }
+        .progress-bar-inner { width: 0%; height: 100%; background: var(--success-color); border-radius: 10px; transition: width 0.5s ease; }
+
+        .start-button {
+            padding: 1vh 3vw;
+            font-size: clamp(1.2em, 3vmin, 1.5em);
+            border: none; border-radius: 15px; background: var(--start-btn-bg); color: var(--white-color); cursor: pointer;
+            transition: all 0.3s ease; box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+        }
+        .start-button:hover { background: var(--start-btn-hover); transform: translateY(-2px); }
+        .start-button:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        /* --- 游戏区 --- */
+        .game-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 0;
+        }
+
+        .bubbles-container {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 1.5vmin;
+            padding: 1.5vmin;
+            width: 100%;
+            box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1) inset;
+            flex-grow: 1;
+            min-height: 0;
+        }
+
+        .bubble {
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(14px, 4vmin, 36px);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.15);
+            animation: float 6s ease-in-out infinite;
+            /* 确保文字不超出泡泡 */
+            padding: 0.5rem;
+            text-align: center;
+            word-break: keep-all;
+            overflow: hidden;
+        }
+
+        .bubble:nth-child(4n+1) { background-color: var(--bubble-pink); animation-delay: 0s; }
+        .bubble:nth-child(4n+2) { background-color: var(--bubble-yellow); animation-delay: -1.5s; }
+        .bubble:nth-child(4n+3) { background-color: var(--bubble-green); animation-delay: -3s; }
+        .bubble:nth-child(4n) { background-color: var(--bubble-purple); animation-delay: -4.5s; }
+        
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-5px); } 100% { transform: translateY(0px); } }
+        
+        .bubble.selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 25px var(--selected-color);
+            border: 4px solid var(--selected-color);
+        }
+        
+        .bubble.pop {
+            animation: pop-out 0.5s forwards;
+            pointer-events: none;
+        }
+        @keyframes pop-out {
+            0% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0); opacity: 0; visibility: hidden; }
+        }
+
+        .bubble.wrong { animation: shake 0.4s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+        /* --- 结束弹窗 --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; visibility: hidden; opacity: 0; transition: opacity 0.5s ease, visibility 0.5s ease; }
+        .modal-overlay.show { visibility: visible; opacity: 1; }
+        .modal-content { background: var(--white-color); padding: 40px; border-radius: 25px; text-align: center; transform: scale(0.7); transition: transform 0.5s ease; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .modal-overlay.show .modal-content { transform: scale(1); }
+        .modal-content h2 { font-size: 2.5em; color: var(--success-color); margin-top: 0; margin-bottom: 20px; }
+        .modal-content p { font-size: 1.5em; margin-bottom: 30px; }
+
+        /* --- 烟花效果 --- */
+        .firework { position: absolute; width: 4px; height: 4px; background: #fff; border-radius: 50%; opacity: 1; animation: firework-explode 1s forwards; }
+        @keyframes firework-explode { to { transform: translate(var(--x), var(--y)) scale(1.5); opacity: 0; } }
+
+        /* --- 响应式设计 --- */
+        @media (orientation: portrait) {
+            .bubbles-container {
+                grid-template-columns: repeat(4, 1fr);
+                grid-template-rows: repeat(6, 1fr);
+            }
+        }
+        
+        /* 大屏幕优化 - 教师投屏使用 */
+        @media (min-width: 1200px) {
+            .bubbles-container {
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .bubble {
+                font-size: clamp(18px, 3vmin, 42px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景云朵 -->
+    <div class="cloud cloud1"></div>
+    <div class="cloud cloud2"></div>
+    <div class="cloud cloud3"></div>
+
+    <div class="game-container">
+        <!-- 控制区 -->
+        <div class="controls-area">
+            <h1 class="title">中文八年级生词消消乐 🎈</h1>
+            <div id="unit-selection-container">
+                <label><input type="checkbox" name="unit" value="lesson9"> 第九课</label>
+                <label><input type="checkbox" name="unit" value="lesson1"> 第一课</label>
+                <label><input type="checkbox" name="unit" value="lesson2"> 第二课</label>
+                <label><input type="checkbox" name="unit" value="lesson3"> 第三课</label>
+                <label><input type="checkbox" name="unit" value="lesson4"> 第四课</label>
+                <label><input type="checkbox" name="unit" value="lesson6"> 第六课</label>
+                <label><input type="checkbox" name="unit" value="custom" id="custom-checkbox"> 自定义</label>
+            </div>
+            <div id="custom-list-container" style="display: none;">
+                <textarea id="custom-list-textarea" placeholder="请输入生字和英文意思，每行一对，用空格隔开。例如:&#10;我 I&#10;你 you"></textarea>
+            </div>
+            <div class="game-info">
+                <div class="progress-container">
+                    <span>进度:</span>
+                    <div class="progress-bar"><div class="progress-bar-inner"></div></div>
+                </div>
+                <div class="start-button-wrapper">
+                    <button class="start-button" id="startButton" disabled>开始游戏</button>
+                </div>
+                <div class="timer-container">
+                    <span>时间:</span>
+                    <span id="timer">0s</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 游戏区 -->
+        <div class="game-area">
+            <div class="bubbles-container" id="bubblesContainer">
+                <!-- 泡泡会由JS动态生成在这里 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 游戏结束弹窗 -->
+    <div class="modal-overlay" id="winModal">
+        <div class="modal-content">
+            <h2 id="winMessage">🎉 恭喜你！🎉</h2>
+            <p id="winTime"></p>
+            <button class="start-button" id="playAgainButton">再玩一次</button>
+        </div>
+    </div>
+
+    <!-- 引入Tone.js用于音效 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- DOM 元素获取 ---
+            const startButton = document.getElementById('startButton');
+            const playAgainButton = document.getElementById('playAgainButton');
+            const bubblesContainer = document.getElementById('bubblesContainer');
+            const timerEl = document.getElementById('timer');
+            const progressBarInner = document.querySelector('.progress-bar-inner');
+            const winModal = document.getElementById('winModal');
+            const unitCheckboxes = document.querySelectorAll('input[name="unit"]');
+            const customCheckbox = document.getElementById('custom-checkbox');
+            const customListContainer = document.getElementById('custom-list-container');
+            const customListTextarea = document.getElementById('custom-list-textarea');
+
+            // --- 生字数据 ---
+            const wordLists = {
+                lesson9: [
+                    { char: "天气", meaning: "weather" },
+                    { char: "多云", meaning: "cloudy" },
+                    { char: "太阳", meaning: "sun" },
+                    { char: "阴", meaning: "overcast" },
+                    { char: "晴", meaning: "fine, sunny" },
+                    { char: "有雾", meaning: "foggy" },
+                    { char: "风", meaning: "wind" },
+                    { char: "刮风", meaning: "windy" },
+                    { char: "下雨", meaning: "to rain" },
+                    { char: "下雪", meaning: "to snow" },
+                    { char: "热", meaning: "to be hot" },
+                    { char: "冷", meaning: "to be cold" },
+                    { char: "凉快", meaning: "to be cool and pleasant" },
+                    { char: "季节", meaning: "season" },
+                    { char: "北京", meaning: "the capital city of China" },
+                    { char: "春天", meaning: "spring" },
+                    { char: "夏天", meaning: "summer" },
+                    { char: "秋天", meaning: "autumn" },
+                    { char: "冬天", meaning: "winter" },
+                    { char: "放假", meaning: "to have a holiday, vacation or break" },
+                    { char: "春假", meaning: "spring break" },
+                    { char: "暑假", meaning: "summer vacation" },
+                    { char: "寒假", meaning: "winter holiday" },
+                    { char: "又......又......", meaning: "[indicating more than one condition] and" },
+                    { char: "风沙", meaning: "dust storm" },
+                    { char: "气温", meaning: "temperature" },
+                    { char: "最高", meaning: "highest" },
+                    { char: "最低", meaning: "lowest" },
+                    { char: "摄氏", meaning: "Celsius / centigrade" },
+                    { char: "华氏", meaning: "Fahrenheit" },
+                    { char: "度", meaning: "degree" },
+                    { char: "天气预报", meaning: "weather forecast" },
+                    { char: "阴雨", meaning: "overcast and rainy" },
+                    { char: "云", meaning: "cloud" },
+                    { char: "雷阵雨", meaning: "thunder shower" },
+                    { char: "转", meaning: "to turn; to shift; to change" },
+                    { char: "死", meaning: "deathly; dead; to die" },
+                    { char: "那就", meaning: "(indicating a consequence) therefore, then" },
+                    { char: "哇", meaning: "wow [exclamation]" },
+                    { char: "会", meaning: "will; can, to be able to" },
+                    { char: "带", meaning: "to bring, to take" },
+                    { char: "雨衣", meaning: "raincoat" },
+                    { char: "雨伞", meaning: "umbrella" },
+                    { char: "拿", meaning: "to take, to bring (by hand); hold" },
+                    { char: "雨", meaning: "rain" },
+                    { char: "灬", meaning: "fire" },
+                    { char: "冫", meaning: "ice" },
+                    { char: "日", meaning: "sun, clear" },
+                    { char: "禾", meaning: "rice crop" },
+                    { char: "⻏（左）", meaning: "mound" },
+                    { char: "夂", meaning: "to follow" }
+                ],
+                lesson1: [
+                    { char: "课业", meaning: "schoolwork, study, curriculum" },
+                    { char: "课", meaning: "subject; lesson; class" },
+                    { char: "上课", meaning: "to attend class, go to class, in class" },
+                    { char: "课程表", meaning: "school timetable" },
+                    { char: "数学", meaning: "mathematic / mathematics" },
+                    { char: "科学", meaning: "science" },
+                    { char: "体育", meaning: "physical education" },
+                    { char: "地理", meaning: "geography" },
+                    { char: "历史", meaning: "history" },
+                    { char: "音乐", meaning: "music" },
+                    { char: "美术", meaning: "the fine arts / art" },
+                    { char: "猜", meaning: "to guess" },
+                    { char: "知道", meaning: "to know" },
+                    { char: "第", meaning: "a prefix used to form ordinal numbers" },
+                    { char: "节", meaning: "measure word for lessons, section, period; n.festival" },
+                    { char: "上", meaning: "adj. previous; upperto v. go to, attend" },
+                    { char: "下", meaning: "next; under" },
+                    { char: "怎么", meaning: "how, why" },
+                    { char: "唉", meaning: "exclaim. (a sigh)" },
+                    { char: "讨厌", meaning: "V. to hate; Adj. annoying" },
+                    { char: "为什么", meaning: "why" },
+                    { char: "细胞", meaning: "1. cell; 2. describing someone's talent (arts, music, sports)" },
+                    { char: "就是", meaning: "just, simply (emphasizing a fact)" },
+                    { char: "头脑", meaning: "1. brain/mind; 2. describing someone's talent (science, math)" },
+                    { char: "聪明", meaning: "intelligent / bright/smart" },
+                    { char: "考试", meaning: "V. to give or take an examination; N. exam/test" },
+                    { char: "考", meaning: "to give or take examination; to test" },
+                    { char: "马马虎虎", meaning: "so so" },
+                    { char: "还可以", meaning: "not bad, OK" },
+                    { char: "糟糕", meaning: "Terrible" },
+                    { char: "差", meaning: "not good, not up to standard" },
+                    { char: "得", meaning: "de--used after a verb to indicae degree; dé--receive, get; děi--to have to / must / ought to / to need to" },
+                    { char: "分", meaning: "mark; minute; cent" },
+                    { char: "只", meaning: "only" },
+                    { char: "准备", meaning: "to prepare" },
+                    { char: "开夜车", meaning: "burn the midnight oil / work late into the night" },
+                    { char: "好好儿", meaning: "to one's best, in a proper way; to one's heart's content" },
+                    { char: "姓名", meaning: "full name" },
+                    { char: "班级", meaning: "class" }
+                ],
+                lesson2: [
+                    { char: "学习", meaning: "to learn; to study" },
+                    { char: "流利", meaning: "fluent" },
+                    { char: "马马虎虎", meaning: "so-so" },
+                    { char: "很差", meaning: "really bad" },
+                    { char: "一般般", meaning: "so so" },
+                    { char: "就是", meaning: "in the same way as" },
+                    { char: "糟糕", meaning: "1. adj. terrible; bad; 2. [exclaim] oh no; how terrible" },
+                    { char: "哪里", meaning: "no (an expression of modest denial)" },
+                    { char: "意思", meaning: "meaning" },
+                    { char: "什么意思", meaning: "what does it mean" },
+                    { char: "久", meaning: "long (of time)" },
+                    { char: "多", meaning: "1. how; 2. more than, over" },
+                    { char: "生活", meaning: "life" },
+                    { char: "新", meaning: "new" },
+                    { char: "校", meaning: "school" },
+                    { char: "班", meaning: "class" },
+                    { char: "以前", meaning: "before / formerly / previous" },
+                    { char: "女", meaning: "woman, female" },
+                    { char: "女子中学", meaning: "girl's middle/high school" },
+                    { char: "哦", meaning: "exclaim. [indicating understanding or realization]" },
+                    { char: "男", meaning: "man, male" },
+                    { char: "男女合校", meaning: "co-ed school" },
+                    { char: "千", meaning: "thousand" },
+                    { char: "百", meaning: "hundred" },
+                    { char: "课本", meaning: "textbook" },
+                    { char: "字典", meaning: "dictionary" },
+                    { char: "作业", meaning: "homework" },
+                    { char: "笔", meaning: "pen" },
+                    { char: "手机", meaning: "cell phone" },
+                    { char: "钱", meaning: "money" },
+                    { char: "忘", meaning: "to forget" },
+                    { char: "向", meaning: "towards (direction)" },
+                    { char: "借", meaning: "borrow, lend" },
+                    { char: "行", meaning: "all right, O.K." },
+                    { char: "拿去", meaning: "take (away from the speaker)" },
+                    { char: "嘘", meaning: "Shh..." },
+                    { char: "说话", meaning: "to talk" },
+                    { char: "注意", meaning: "v. pay attention to; take notice of" },
+                    { char: "迟到", meaning: "be late" },
+                    { char: "睡过头", meaning: "oversleep" },
+                    { char: "以后", meaning: "later, after" },
+                    { char: "可以", meaning: "may, can" },
+                    { char: "嘿", meaning: "exclaim. hey" },
+                    { char: "问题", meaning: "question / problem / issue / topic" },
+                    { char: "交", meaning: "hand in" },
+                    { char: "王(𤣩)", meaning: "jade" },
+                    { char: "木", meaning: "tree" },
+                    { char: "女", meaning: "female" },
+                    { char: "田", meaning: "field" },
+                    { char: "亻", meaning: "standing person" },
+                    { char: "心", meaning: "heart" },
+                    { char: "辶", meaning: "movement, to go & stop" },
+                    { char: "刂", meaning: "knife" },
+                    { char: "亠", meaning: "head" }
+                ],
+                lesson3: [
+                    { char: "每天", meaning: "every day" },
+                    { char: "天天", meaning: "every day" },
+                    { char: "路", meaning: "road; path" },
+                    { char: "走路", meaning: "to walk" },
+                    { char: "走", meaning: "to go, to walk (physically)" },
+                    { char: "骑自行车", meaning: "to ride a bicycle" },
+                    { char: "坐", meaning: "to sit, to board" },
+                    { char: "坐火车", meaning: "to take a train" },
+                    { char: "公共汽车", meaning: "bus" },
+                    { char: "飞机", meaning: "airplane" },
+                    { char: "小轿车", meaning: "car" },
+                    { char: "地铁", meaning: "subway" },
+                    { char: "出租车", meaning: "taxi" },
+                    { char: "校车", meaning: "school bus" },
+                    { char: "开", meaning: "to drive, operate" },
+                    { char: "到", meaning: "prep. to; v. arrive, go to" },
+                    { char: "长", meaning: "(of space or time) long" },
+                    { char: "时间", meaning: "time" },
+                    { char: "只要", meaning: "only" },
+                    { char: "多", meaning: "is used to mean over or more than" },
+                    { char: "几", meaning: "a few" },
+                    { char: "分钟", meaning: "minute" },
+                    { char: "点钟", meaning: "(indicating time of day) o'clock" },
+                    { char: "小时", meaning: "hour" },
+                    { char: "住", meaning: "to live, reside" },
+                    { char: "东", meaning: "east" },
+                    { char: "南", meaning: "south" },
+                    { char: "西", meaning: "west" },
+                    { char: "北", meaning: "north" },
+                    { char: "山区", meaning: "mountain area" },
+                    { char: "城市", meaning: "city" },
+                    { char: "近", meaning: "be near, close" },
+                    { char: "远", meaning: "be far" },
+                    { char: "离", meaning: "be away from (distance)" },
+                    { char: "离......近/远吗？", meaning: "be...close to / far away from...?" },
+                    { char: "离......很近/远", meaning: "be close to/be far away from" },
+                    { char: "离......有多远？", meaning: "how far is the distance from...to...?" },
+                    { char: "公里", meaning: "kilometer" },
+                    { char: "英里", meaning: "mile" },
+                    { char: "差不多", meaning: "1. almost, nearly; 2. about the same" },
+                    { char: "邮局", meaning: "post office" },
+                    { char: "站", meaning: "n. station; v. stop" },
+                    { char: "火车站", meaning: "train station" },
+                    { char: "公共汽车站", meaning: "public bus stop" },
+                    { char: "地铁站", meaning: "subway station" },
+                    { char: "飞机场", meaning: "airport" },
+                    { char: "图书馆", meaning: "library" },
+                    { char: "市场", meaning: "market" },
+                    { char: "书店", meaning: "bookstore" },
+                    { char: "冰淇淋店", meaning: "ice cream store" },
+                    { char: "百货商店", meaning: "department store" },
+                    { char: "宠物店", meaning: "pet store" },
+                    { char: "中国饭馆", meaning: "Chinese restaurant" },
+                    { char: "马路", meaning: "street / road" },
+                    { char: "路口", meaning: "intersection" },
+                    { char: "十字路口", meaning: "crossroads" },
+                    { char: "丁字路口", meaning: "T-intersection , t-junction" },
+                    { char: "红绿灯", meaning: "traffic light" },
+                    { char: "往", meaning: "towards, to" },
+                    { char: "拐", meaning: "to turn" },
+                    { char: "劳驾", meaning: "[polite word used when asking for help] excuse me, may I trouble you" },
+                    { char: "过", meaning: "pass, cross" },
+                    { char: "办公室", meaning: "office" },
+                    { char: "礼堂", meaning: "assembly hall / auditorium" },
+                    { char: "小卖部", meaning: "concession stand, snack bar" },
+                    { char: "教室", meaning: "classroom" },
+                    { char: "教室楼", meaning: "classroom building" },
+                    { char: "操场", meaning: "playground / sports field" },
+                    { char: "体育馆", meaning: "gym" },
+                    { char: "厕所", meaning: "restroom" },
+                    { char: "就在", meaning: "is right at" },
+                    { char: "对面", meaning: "opposite (location)" },
+                    { char: "旁边", meaning: "next to; the side" },
+                    { char: "足", meaning: "foot" },
+                    { char: "彳", meaning: "left step" },
+                    { char: "火", meaning: "fire" },
+                    { char: "氵", meaning: "water" },
+                    { char: "亻", meaning: "standing person" },
+                    { char: "亠", meaning: "lid, head" },
+                    { char: "辶", meaning: "to go & stop; movement; walking" },
+                    { char: "刂", meaning: "knife" },
+                    { char: "土", meaning: "earth；soil" }
+                ],
+                lesson4: [
+                    { char: "周末", meaning: "weekend" },
+                    { char: "休闲生活", meaning: "leisure life" },
+                    { char: "新闻", meaning: "news" },
+                    { char: "音乐会", meaning: "concert" },
+                    { char: "电视剧", meaning: "TV Drama/TV series" },
+                    { char: "电影", meaning: "movie" },
+                    { char: "科幻电影", meaning: "science fiction movie" },
+                    { char: "功夫电影", meaning: "kung fu (Chinese martial arts) movie" },
+                    { char: "爱情电影", meaning: "love (romantic) movie" },
+                    { char: "卡通/动画片儿", meaning: "cartoon" },
+                    { char: "动作片/动作片儿", meaning: "action movie" },
+                    { char: "悲剧片/悲剧片儿", meaning: "tragedy film" },
+                    { char: "喜剧片/喜剧片儿", meaning: "comedy" },
+                    { char: "恐怖片/恐怖片儿", meaning: "horror movie" },
+                    { char: "部", meaning: "measure word for films, cars etc." },
+                    { char: "赛", meaning: "match, contest" },
+                    { char: "比赛", meaning: "match, competition" },
+                    { char: "球赛", meaning: "any game that is played with a ball" },
+                    { char: "场", meaning: "measure word for shows, concerts, competitions etc." },
+                    { char: "迷", meaning: "enthusiast, fan, ...addict" },
+                    { char: "球迷", meaning: "____ball game fan" },
+                    { char: "古典音乐", meaning: "classical music" },
+                    { char: "流行音乐", meaning: "pop music" },
+                    { char: "一天到晚", meaning: "all day long, from morning until night" },
+                    { char: "电视节目", meaning: "TV program" },
+                    { char: "电视节目时间表", meaning: "TV program schedule" },
+                    { char: "无聊", meaning: "bored, boring" },
+                    { char: "有意思/有趣", meaning: "interesting" },
+                    { char: "没意思", meaning: "not interesting; meaningless; boring." },
+                    { char: "电视台", meaning: "(n) television station" },
+                    { char: "频道", meaning: "(TV or radio) channel" },
+                    { char: "有什么好的", meaning: "anything good" },
+                    { char: "没(有)什么好的", meaning: "nothing good" },
+                    { char: "过", meaning: "indicate a past experience" },
+                    { char: "次", meaning: "measure word [for frequency] time" },
+                    { char: "还没", meaning: "haven't; not yet." },
+                    { char: "搞错", meaning: "make mistake" },
+                    { char: "别", meaning: "don't" },
+                    { char: "晚会", meaning: "evening entertainment/party" },
+                    { char: "春晚", meaning: "Spring Festival Gala" },
+                    { char: "聚会", meaning: "get-together; party" },
+                    { char: "舞会", meaning: "dance party; ball" },
+                    { char: "派对", meaning: "party" },
+                    { char: "张", meaning: "a measure word for ticket, paper etc." },
+                    { char: "票", meaning: "ticket" },
+                    { char: "门票", meaning: "entrance ticket" },
+                    { char: "乐器", meaning: "musical instrument" },
+                    { char: "西方乐器", meaning: "western musical instrument" },
+                    { char: "东方乐器", meaning: "eastern musical instrument" },
+                    { char: "拉", meaning: "To play (violin, erhu, etc.); to pull" },
+                    { char: "弹", meaning: "play (instrument), pluck e.g. piano, guitar, guzheng etc." },
+                    { char: "吹", meaning: "to blow/to play a wind instrument e.g. flute" },
+                    { char: "小提琴", meaning: "violin" },
+                    { char: "钢琴", meaning: "piano" },
+                    { char: "吉他", meaning: "guitar" },
+                    { char: "古筝", meaning: "Chinese zither, a 21 or 25 stringed plucked instrument" },
+                    { char: "琵琶", meaning: "Chinese lute, with 4 strings, a large pear-shaped body and a fretted fingerboard" },
+                    { char: "二胡", meaning: "Chinese fiddle, a two-stringed instrument played with a bow" },
+                    { char: "笛子", meaning: "flute" },
+                    { char: "对", meaning: "prep. towards, to (regarding an attitude)" },
+                    { char: "兴趣", meaning: "interest in something; hobby" },
+                    { char: "对......有/没兴趣", meaning: "be (not) interested in" },
+                    { char: "对......（不）感兴趣", meaning: "be (not) interested in" },
+                    { char: "有空/没空", meaning: "to have free time/ don't have free time" },
+                    { char: "有什么事", meaning: "what's the matter? what's up?" },
+                    { char: "教", meaning: "teach" },
+                    { char: "京剧", meaning: "Beijing opera" },
+                    { char: "免费", meaning: "free of charge" },
+                    { char: "礻/示", meaning: "to notify" },
+                    { char: "阝（右边）", meaning: "city" },
+                    { char: "心", meaning: "heart" },
+                    { char: "土", meaning: "earth，soil" },
+                    { char: "宀", meaning: "roof with chimney" },
+                    { char: "彡", meaning: "hairy" },
+                    { char: "弓", meaning: "bow" },
+                    { char: "⻌", meaning: "to go and stop" },
+                    { char: "刂", meaning: "knife" },
+                    { char: "木", meaning: "tree，wood" },
+                    { char: "冂", meaning: "border" }
+                ],
+                lesson6: [
+                    { char: "各有千秋", meaning: "each has it's merits" },
+                    { char: "好久不见", meaning: "haven't seen sb. for a very long time" },
+                    { char: "长得", meaning: "present state of growth, to look..." },
+                    { char: "像", meaning: "alike" },
+                    { char: "比较", meaning: "comparatively / relatively" },
+                    { char: "高", meaning: "high / tall" },
+                    { char: "矮", meaning: "short (of stature)" },
+                    { char: "挺", meaning: "prominent (nose)" },
+                    { char: "塌", meaning: "flat (nose)" },
+                    { char: "觉得", meaning: "to feel; to think" },
+                    { char: "瘦", meaning: "thin" },
+                    { char: "苗条", meaning: "(of a woman) slim" },
+                    { char: "胖", meaning: "fat" },
+                    { char: "卷", meaning: "curly" },
+                    { char: "直", meaning: "straight" },
+                    { char: "长", meaning: "long" },
+                    { char: "短", meaning: "short" },
+                    { char: "俩", meaning: "two [people]" },
+                    { char: "仨", meaning: "three" },
+                    { char: "奇怪", meaning: "strange / odd" },
+                    { char: "比", meaning: "than (indicating comparison)" },
+                    { char: "跟", meaning: "and" },
+                    { char: "一样", meaning: "the same" },
+                    { char: "跟...一样", meaning: "the same as ...." },
+                    { char: "减肥", meaning: "to lose weight" },
+                    { char: "如果", meaning: "if, in case， in the event of" },
+                    { char: "早餐", meaning: "breakfast" },
+                    { char: "午餐", meaning: "lunch" },
+                    { char: "晚餐", meaning: "dinner" },
+                    { char: "餐", meaning: "meal" },
+                    { char: "一日三餐", meaning: "three meals a day" },
+                    { char: "长得着急", meaning: "to describe someone looks older than his/her actual age" },
+                    { char: "着急", meaning: "worry / feel anxious" },
+                    { char: "个子", meaning: "height / stature / build / size" },
+                    { char: "个性", meaning: "personality" },
+                    { char: "随和", meaning: "amiable, easy to get along with" },
+                    { char: "幽默感", meaning: "sense of humor" },
+                    { char: "做事", meaning: "to do things" },
+                    { char: "内向", meaning: "introverted" },
+                    { char: "马马虎虎", meaning: "1. so-so, not so bad; 2. careless, not be conscientious" },
+                    { char: "认真", meaning: "conscientious; earnest" },
+                    { char: "爱", meaning: "to love" },
+                    { char: "挑剔", meaning: "v. nitpick; adj. hypercritical" },
+                    { char: "笨头笨脑", meaning: "stupid, have a thick skull" },
+                    { char: "外向", meaning: "extroverted" },
+                    { char: "管家婆", meaning: "a nickname for house keeper/bossy person" },
+                    { char: "见", meaning: "to see" },
+                    { char: "亻", meaning: "standing person" },
+                    { char: "车", meaning: "vehicle" },
+                    { char: "亠", meaning: "head；lid" },
+                    { char: "矢", meaning: "arrow" },
+                    { char: "疒", meaning: "sickness" },
+                    { char: "月(肉)", meaning: "meat；flesh" },
+                    { char: "女", meaning: "female" },
+                    { char: "木", meaning: "tree; wood" },
+                    { char: "足", meaning: "foot" },
+                    { char: "忄", meaning: "heart" },
+                    { char: "冂", meaning: "border" }
+                ]
+            };
+
+            // --- 音效合成器 ---
+            let synth;
+            const correctSound = () => { if (synth) synth.triggerAttackRelease('C5', '8n', Tone.now()); };
+            const wrongSound = () => { if (synth) synth.triggerAttackRelease('G3', '8n', Tone.now()); };
+            const popSound = () => { if(Tone && Tone.MembraneSynth){ const popSynth = new Tone.MembraneSynth().toDestination(); popSynth.triggerAttackRelease('C2', '8n', Tone.now()); } };
+
+            // --- 游戏状态变量 ---
+            let gameState = { isGameRunning: false, timerId: null, seconds: 0, firstSelection: null, totalPairs: 0, foundPairs: 0 };
+
+            // --- 事件监听 ---
+            startButton.addEventListener('click', startGame);
+            playAgainButton.addEventListener('click', startGame);
+            bubblesContainer.addEventListener('click', handleBubbleClick);
+            unitCheckboxes.forEach(checkbox => checkbox.addEventListener('change', checkStartButtonState));
+            customListTextarea.addEventListener('input', checkStartButtonState);
+
+
+            function checkStartButtonState() {
+                const anyUnitChecked = Array.from(unitCheckboxes).some(cb => cb.checked && cb.value !== 'custom');
+                const customChecked = customCheckbox.checked;
+                customListContainer.style.display = customChecked ? 'block' : 'none';
+
+                if (customChecked) {
+                    startButton.disabled = parseCustomList(customListTextarea.value).length === 0;
+                } else {
+                    startButton.disabled = !anyUnitChecked;
+                }
+            }
+
+
+            // --- 核心功能函数 ---
+            function startGame() {
+                // 初始化音效
+                if (!synth && typeof Tone !== 'undefined') { 
+                    try { 
+                        synth = new Tone.PolySynth(Tone.FMSynth).toDestination();
+                    } catch (e) { 
+                        console.error("Tone.js could not be initialized.", e); 
+                    } 
+                }
+
+                // 重置游戏状态
+                if (gameState.timerId) clearInterval(gameState.timerId);
+                gameState = { ...gameState, isGameRunning: true, seconds: 0, foundPairs: 0, firstSelection: null };
+                bubblesContainer.innerHTML = '';
+                winModal.classList.remove('show');
+                timerEl.textContent = '0s';
+
+                // 获取生字列表
+                let wordList = getWordList();
+                if (wordList.length < 12) {
+                    alert('所选单元的生字不足12对，请选择更多单元或在自定义中添加！');
+                    return;
+                }
+
+                // 准备游戏数据
+                const gamePairs = shuffleArray(wordList).slice(0, 12);
+                gameState.totalPairs = gamePairs.length;
+                let allBubblesData = [];
+                gamePairs.forEach((pair, index) => {
+                    allBubblesData.push({ value: pair.char, type: 'char', pairId: index });
+                    allBubblesData.push({ value: pair.meaning, type: 'meaning', pairId: index });
+                });
+                
+                // 创建泡泡并开始计时
+                shuffleArray(allBubblesData).forEach(data => createBubble(data));
+                updateProgress();
+                gameState.timerId = setInterval(updateTimer, 1000);
+            }
+            
+            function getWordList() {
+                let combinedList = [];
+                unitCheckboxes.forEach(checkbox => {
+                    if (checkbox.checked && checkbox.value !== 'custom') {
+                        combinedList = combinedList.concat(wordLists[checkbox.value]);
+                    }
+                });
+
+                if (customCheckbox.checked) {
+                    combinedList = combinedList.concat(parseCustomList(customListTextarea.value));
+                }
+                // 去重
+                return combinedList.filter((item, index, self) => 
+                    index === self.findIndex((t) => (
+                        t.char === item.char && t.meaning === item.meaning
+                    ))
+                );
+            }
+
+            function parseCustomList(text) {
+                return text.split('\n')
+                           .map(line => line.trim())
+                           .filter(line => line)
+                           .map(line => {
+                               const parts = line.split(/\s+/);
+                               if (parts.length >= 2) {
+                                   return { char: parts[0], meaning: parts.slice(1).join(' ') };
+                               }
+                               return null;
+                           })
+                           .filter(item => item);
+            }
+
+
+            function handleBubbleClick(e) {
+                if (!gameState.isGameRunning) return;
+                const clickedBubble = e.target.closest('.bubble');
+                if (!clickedBubble || clickedBubble.classList.contains('pop')) return;
+
+                if (gameState.firstSelection === clickedBubble) {
+                    clickedBubble.classList.remove('selected');
+                    gameState.firstSelection = null;
+                    return;
+                }
+
+                if (!gameState.firstSelection) {
+                    gameState.firstSelection = clickedBubble;
+                    clickedBubble.classList.add('selected');
+                } else {
+                    const first = gameState.firstSelection.dataset;
+                    const second = clickedBubble.dataset;
+
+                    if (first.pairId === second.pairId && first.type !== second.type) {
+                        correctSound();
+                        popSound();
+                        gameState.firstSelection.classList.add('pop');
+                        clickedBubble.classList.add('pop');
+                        gameState.foundPairs++;
+                        updateProgress();
+                        if (gameState.foundPairs === gameState.totalPairs) {
+                            endGame();
+                        }
+                    } else {
+                        wrongSound();
+                        gameState.firstSelection.classList.add('wrong');
+                        clickedBubble.classList.add('wrong');
+                        setTimeout(() => {
+                            gameState.firstSelection.classList.remove('wrong');
+                            clickedBubble.classList.remove('wrong');
+                        }, 400);
+                    }
+                    gameState.firstSelection.classList.remove('selected');
+                    gameState.firstSelection = null;
+                }
+            }
+
+            function endGame() {
+                clearInterval(gameState.timerId);
+                gameState.isGameRunning = false;
+                document.getElementById('winMessage').textContent = '🎉 太棒啦！全部完成！ 🎉';
+                document.getElementById('winTime').textContent = `用时: ${gameState.seconds} 秒`;
+                winModal.classList.add('show');
+                for (let i = 0; i < 30; i++) createFirework();
+            }
+
+            function createBubble(data) {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                bubble.textContent = data.value;
+                bubble.dataset.value = data.value;
+                bubble.dataset.type = data.type;
+                bubble.dataset.pairId = data.pairId;
+                bubblesContainer.appendChild(bubble);
+            }
+
+            function updateTimer() {
+                gameState.seconds++;
+                timerEl.textContent = `${gameState.seconds}s`;
+            }
+            
+            function updateProgress() {
+                const percentage = gameState.totalPairs > 0 ? (gameState.foundPairs / gameState.totalPairs) * 100 : 0;
+                progressBarInner.style.width = `${percentage}%`;
+            }
+
+            function createFirework() {
+                const firework = document.createElement('div');
+                firework.className = 'firework';
+                const modalContent = winModal.querySelector('.modal-content');
+                modalContent.appendChild(firework);
+                const angle = Math.random() * Math.PI * 2;
+                const radius = Math.random() * 150 + 50;
+                const x = Math.cos(angle) * radius;
+                const y = Math.sin(angle) * radius;
+                firework.style.setProperty('--x', `${x}px`);
+                firework.style.setProperty('--y', `${y}px`);
+                firework.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                const startX = modalContent.offsetWidth / 2;
+                const startY = modalContent.offsetHeight / 2;
+                firework.style.left = `${startX}px`;
+                firework.style.top = `${startY}px`;
+                setTimeout(() => firework.remove(), 1000);
+            }
+
+            function shuffleArray(array) {
+                let currentIndex = array.length, randomIndex;
+                while (currentIndex != 0) {
+                    randomIndex = Math.floor(Math.random() * currentIndex);
+                    currentIndex--;
+                    [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+                }
+                return array;
+            }
+        });
+    </script>
+</body>
+</html>    
